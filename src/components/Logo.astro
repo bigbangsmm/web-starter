@@ -1,0 +1,13 @@
+---
+// Example component showing how to use the image proxy endpoint
+const { src = '/api/images/next.png', alt = 'Logo' } = Astro.props
+---
+<img src={src} alt={alt} loading="lazy" decoding="async" />
+
+<!--
+Examples:
+ - Direct use of proxied path: <img src="/api/images/next.png" />
+ - If your DB stores an object path: row.logo = 'logos/next.png' -> use `/api/images/${row.logo}`
+ - If your DB stores a full public URL, you can detect and use it directly:
+    const src = row.logo.startsWith('http') ? row.logo : `/api/images/${row.logo}`
+-->
