@@ -1,5 +1,7 @@
 import { createServiceClient, buildPublicUrl, DEFAULT_BUCKET } from '../../../utils/supabaseStorage'
 
+export const prerender = false;
+
 const SUPABASE_URL = (import.meta.env.SUPABASE_URL as string) || process.env.SUPABASE_URL
 const DEFAULT_LONG_CACHE = 'public, max-age=31536000, immutable'
 const PRIVATE_CACHE = 'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400'
@@ -62,7 +64,8 @@ export async function GET({ params, request }: { params: Record<string, any>, re
     const client = createServiceClient()
     const { data, error } = await client.storage.from(bucket).download(path)
     if (error) {
-      if (error.status === 404) return new Response('Not found', { status: 404 })
+      const errStatus = (error as any)?.status
+      if (errStatus === 404) return new Response('Not found', { status: 404 })
       console.error('Supabase storage error', error)
       return new Response('Upstream error', { status: 500 })
     }
@@ -77,11 +80,11 @@ export async function GET({ params, request }: { params: Record<string, any>, re
       // Node Readable stream -> read to buffer
       const chunks: Uint8Array[] = []
       for await (const chunk of (data as any)) chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
-      body = Buffer.concat(chunks).buffer
+      body = Buffer.concat(chunks).buffer as unknown as ArrayBuffer
     } else {
       // Fallback: try to convert
       const text = await (data as any).text()
-      body = new TextEncoder().encode(text).buffer
+      body = (new TextEncoder().encode(text).buffer) as unknown as ArrayBuffer
     }
 
     return new Response(body, {
